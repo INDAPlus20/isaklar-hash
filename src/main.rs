@@ -65,7 +65,8 @@ fn all(){
 }
 
 fn help() {
-    println!("Available commands: ");
+
+    println!("Welcome to Isak's very useful database! The available commands are: ");
     println!("\tget \t<key>");
     println!("\tinsert \t<key> <value>");
     println!("\tremove \t<key>");
