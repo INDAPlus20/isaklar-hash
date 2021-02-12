@@ -1,10 +1,12 @@
-use std::{ptr::{null, NonNull}};
+use std::fmt::Display;
+
+use serde::{Serialize, Deserialize};
 
 #[cfg(test)]
 mod tests;
 
 const MAX_LOAD: f32 = 0.7;
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct Entry {
     key: String,
     value: String,
@@ -12,7 +14,7 @@ struct Entry {
 }
 
 impl Entry {
-    /// Chains the entry onto a linked list, returns `Ok(0)` if no duplicate was found and `Ok(1)` otherwise
+    /// Chains the entry onto a linked list, returns `Ok(0)` if no duplicate was found and `Err` otherwise
     pub fn chain(&mut self, entry: Entry) -> Result<i32, String> {
         if self.key != entry.key {
             if let Some(pointer) = &mut self.chain {
@@ -22,7 +24,7 @@ impl Entry {
                 return Ok(0);
             }
         } else {
-            return Ok(1);
+            return Err("Duplicate".to_string());
         }
     }
     /// Finds and returns a reference to the corresponding entry down the chain
@@ -89,9 +91,18 @@ impl Entry {
             return entries;
         }
     }
+
+    pub fn print(&self) {
+        println!("{:?}, {:?}", self.key, self.value);
+        if let Some(chain) = &self.chain {
+            chain.print()
+        }
+    }
+    
 }
 
-struct HashMap {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HashMap {
     values: Vec<Option<Entry>>,
     load: usize,
 }
@@ -108,12 +119,13 @@ impl HashMap {
         return self.values.len()
     }
     /// Makes a new entry and inserts it, if the key is not duplicate
-    pub fn insert(&mut self, key: &str, value: &str) {
+    pub fn insert(&mut self, key: &str, value: &str) -> Result<i32, String> {
         //println!("load: {:?}", self.load as f32 / self.values.len() as f32);
         if self.load as f32 / self.values.len() as f32  >= MAX_LOAD {
             
             self.resize();
         }
+        let mut result = Ok(0);
         let hash = hash(key, self.values.len());
         if let Some(entry) = &mut self.values[hash] {
             // Collision
@@ -123,7 +135,7 @@ impl HashMap {
                 value: value.to_string(),
                 chain: None,
             };
-            entry.chain(new_entry);
+            result = entry.chain(new_entry);
             //println!("Collision!");
         } else {
             // New entry
@@ -132,8 +144,10 @@ impl HashMap {
                 value: value.to_string(),
                 chain: None,
             });
+            result = Ok(0);
         }
         self.load += 1;
+        return result
     }
     /// Get the value connected to key
     pub fn get(&self, key: &str) -> Option<&str> {
@@ -169,6 +183,14 @@ impl HashMap {
                 };
             }
 
+        }
+    }
+
+    pub fn print_all(&self) {
+        for e in &self.values {
+            if let Some(entry) = &e {
+                entry.print()
+            }
         }
     }
 

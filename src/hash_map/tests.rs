@@ -110,6 +110,29 @@ fn remove_by_key(){
 }
 
 #[test]
+fn print() {
+    let mut root_entry = Entry {
+        key: "Isak".to_string(),
+        value: "Larsson".to_string(),
+        chain: None,
+    };
+
+    let res = root_entry.chain(Entry {
+        key: "Malte".to_string(),
+        value: "Blomqvist".to_string(),
+        chain: None,
+    });
+
+    let res = root_entry.chain(Entry {
+        key: "Morris".to_string(),
+        value: "Hansing".to_string(),
+        chain: None,
+    });
+
+    root_entry.print();
+}
+
+#[test]
 fn insert_entry() {
     let mut map = HashMap::new();
     map.insert("Isak", "Larsson");
@@ -151,4 +174,37 @@ fn remove(){
     map.remove("Malte");
     let load = map.load;
     assert_eq!(load, 2);
+}
+
+#[test]
+fn get_value_after_resize() {
+    let mut map = HashMap::new();
+    map.insert("Isak", "Larsson");
+    map.insert("Morris", "Hansing");
+    map.insert("Malte", "Blomqvist");
+    map.insert("Iak", "Larsson");
+    map.insert("Mrris", "Hansing");
+    map.insert("Mlte", "Blomqvist");
+    map.insert("Isaak", "Larsson");
+    map.insert("Isaaak", "Larsson");
+    map.insert("Mltse", "Blomqvist");
+    map.insert("Isaik", "Larsson");
+    map.insert("Isafaak", "Larsson");
+    let value = map.get("Malte");
+    assert_eq!(value.unwrap(), "Blomqvist");
+}
+
+#[test]
+fn serialize_deserialize(){
+    let mut map = HashMap::new();
+    map.insert("Isak", "Larsson");
+    map.insert("Morris", "Hansing");
+    map.insert("Malte", "Blomqvist");
+    map.insert("Iak", "Larsson");
+
+    let serialized = serde_json::to_string(&map).unwrap();
+    println!("serialized = {}", serialized);
+
+    let deserialized:HashMap = serde_json::from_str(&serialized).unwrap();
+    println!("deserialized = {:?}", deserialized);
 }
